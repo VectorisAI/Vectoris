@@ -1,12 +1,32 @@
 # Vectoris — Official Desktop Releases
 
-This repository hosts official signed binary releases, installer packages, and cryptographic update manifests for the **Vectoris Engineering Workstation**.
+Official release distribution repository for the Vectoris Engineering Workstation.
 
-## ?? Download Official Releases
-Official installers and update packages are published under [Releases](https://github.com/VectorisAI/Vectoris/releases).
+## Metadata & Classification
 
-## ?? Cryptographic Verification
-All release artifacts are signed with Minisign Ed25519 cryptographic keys and verified on-device by the installed Vectoris application.
+- Product: Vectoris Engineering Desktop Workstation
+- Target Architecture: Windows 10 / Windows 11 (x86_64)
+- Shell: Tauri v2 Native Runtime
+- Signatures: Minisign Ed25519 Cryptographic Verification
 
 ---
-Copyright © 2026 Vectoris AI Inc. All rights reserved.
+
+## Downloads
+
+Official installer packages and signed binaries are published under [Releases](https://github.com/VectorisAI/Vectoris/releases).
+
+- Windows Installer (NSIS Setup): Vectoris_<version>_x64-setup.exe
+- Windows Enterprise MSI: Vectoris_<version>_x64_en-US.msi
+- Update Metadata: latest.json
+
+---
+
+## Cryptographic Release Verification
+
+All release artifacts are cryptographically signed using Ed25519 keys. The installed Vectoris workstation automatically verifies signatures against the embedded public key before initiating the in-app update handoff.
+
+---
+
+## License
+
+Proprietary Enterprise Software. Copyright (c) 2026 Vectoris AI Inc. All rights reserved.

@@ -1638,38 +1638,6 @@ export function AuthPage() {
             </>
           )}
 
-          {/* Dev / QA Testing Bypass (Only visible in Development) */}
-          {import.meta.env.DEV && (
-            <div
-              className="auth-dev-bypass"
-              style={{
-                marginTop: "20px",
-                paddingTop: "16px",
-                borderTop: "1px dashed var(--border-subtle, rgba(255, 255, 255, 0.1))",
-                textAlign: "center",
-              }}
-            >
-              <Link
-                to="/dashboard"
-                className="button button--secondary"
-                style={{
-                  display: "inline-flex",
-                  width: "100%",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  gap: "8px",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  minHeight: "40px",
-                  borderRadius: "8px",
-                  textDecoration: "none",
-                }}
-              >
-                <span>Skip to Dashboard (Testing / Dev)</span>
-                <span aria-hidden="true">&rarr;</span>
-              </Link>
-            </div>
-          )}
         </div>
       </section>
     </main>

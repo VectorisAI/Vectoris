@@ -1,11 +1,11 @@
 {
-  "version": "v0.2.4",
-  "notes": "Vectoris v0.2.4: Added enterprise password management in Settings (on-device update & deep-link recovery dispatch), live password strength meter, password reset skip flow, and single-instance deep-link protocol routing.",
-  "pub_date": "2026-08-28T18:45:00Z",
+  "version": "v0.2.5",
+  "notes": "Vectoris v0.2.5: Engineering perception and detection workshop, offline-first IndexedDB persistence synchronization, production authentication and recovery flows, unified project reporting, and performance hardening.",
+  "pub_date": "2026-09-10T19:02:00Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUMmdkM0JzNlE4V21jWW5qQ1kzbEJTckljeGFVWlIzOG9EcWo0N3dqYXBzYS8veVF6Z3BlSzNOYXFiRDlnY1dkRVY4enBXK2VQMm8za1ZndzhhNWY1ZTJ1b2hMV1NHRWdNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg3OTQyNzA2CWZpbGU6VmVjdG9yaXNfMC4yLjRfeDY0LXNldHVwLmV4ZQpidHZROXJTRmxHcDhDYTdrTExna2NzbXVqQk9iR08wYXV4bnFpL0kvSU9WQWFWSnNxSEFjOW9PdnFiTEVqQUVyeHU4Vm9UMm1ERExxam9FS3FZR01DZz09Cg==",
-      "url": "https://github.com/VectorisAI/Vectoris/releases/download/v0.2.4/Vectoris_0.2.4_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUMmdkM0JzNlE4V3I3WTFqMjBFNGk1SUNDZ0ZQckZ1S0ZVeS9LdTFOQTNuaVR1cmJMTUpQNU9RQnZQOWNrV0MwZE9KY0J0TmpIVG4xVDNYRGJUUmgvWElOVkJjZ0paa1E4PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg5MDY2OTM2CWZpbGU6VmVjdG9yaXNfMC4yLjVfeDY0LXNldHVwLmV4ZQpYNjFJbU9TTmJhMWNCVStFeXZBNk1MajcxUm52RnlkVnhhc2dOUk56Q2M2OTcyNUd2RTZ1OEoxRE5CQTJ1ZkhLbVI4RkxlMHpQK0crZWV2U3Z5MmNCdz09Cg==",
+      "url": "https://github.com/VectorisAI/Vectoris/releases/download/v0.2.5/Vectoris_0.2.5_x64-setup.exe"
     }
   }
 }

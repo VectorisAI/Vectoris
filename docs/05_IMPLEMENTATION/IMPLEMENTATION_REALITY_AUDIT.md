@@ -106,4 +106,4 @@ A forensic sweep was conducted across the entire service, offline queue, Supabas
 - **Suite Result**: 16/16 test suites PASSED, 0 FAILED (`npm test`)
 - **Type Checking**: 0 errors (`npm run typecheck`)
 - **Production Build**: Clean bundle in 10.38s (`npm run build`)
-- **Rust Backend**: 0 errors (`cargo check`)
+- **Rust Backend**: 0 errors (`cargo check`)

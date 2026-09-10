@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { engineService } from "../services/engineService";
 import { organizationService } from "../services/organizationService";
 
@@ -15,40 +15,12 @@ interface Point {
 }
 
 /**
- * 5-Phase Liquid Wave Progression:
- * 0–25%  (~375ms): Quick initial splash
- * 25–40% (~225ms): Hold — the wave gathers momentum
- * 40–82% (~630ms): Main body — deliberately slow, relaxed liquid expansion
- * 82–96% (~210ms): Long final wash
- * 96–100% (~60ms): Gentle final settle past the screen edge
+ * Organic Cubic Ease-Out Liquid Wave Progression:
+ * Fast, responsive initial wave splash smoothly gliding across the viewport
+ * without any pauses, holds, or stuttering.
  */
 function getLiquidProgress(p: number): number {
-  if (p <= 0.25) {
-    // 0–25%: Fast initial splash
-    const k = p / 0.25;
-    const ease = 1 - Math.pow(1 - k, 3.2);
-    return ease * 0.38;
-  } else if (p <= 0.4) {
-    // 25–40%: Hold — wave gathers itself
-    const k = (p - 0.25) / 0.15;
-    const ease = k * k * (3 - 2 * k);
-    return 0.38 + ease * 0.04;
-  } else if (p <= 0.82) {
-    // 40–82%: Main body — deliberately slow expansion
-    const k = (p - 0.4) / 0.42;
-    const ease = 1 - Math.pow(1 - k, 3.5);
-    return 0.42 + ease * 0.55;
-  } else if (p <= 0.96) {
-    // 82–96%: Long final wash
-    const k = (p - 0.82) / 0.14;
-    const ease = 1 - Math.pow(1 - k, 4.5);
-    return 0.97 + ease * 0.1;
-  } else {
-    // 96–100%: Gentle final settle
-    const k = (p - 0.96) / 0.04;
-    const ease = k * k;
-    return 1.07 + ease * 0.15;
-  }
+  return 1 - Math.pow(1 - p, 2.8);
 }
 
 /**
@@ -69,28 +41,35 @@ function getWaveOffsetPx(y: number, p: number, H: number): number {
 /**
  * Generates an ultra-smooth cubic Bézier liquid water front in actual pixel coordinates.
  * The wave front originates from the top-right button and travels across to the bottom-left.
+ * Features extra-large bounding box safeguards to eliminate clipping on high-DPI displays or window maximize.
  */
 function generateLiquidFrontPath(p: number, W: number, H: number): string {
   const progress = getLiquidProgress(p);
-  const totalSpan = W + 220;
-  const baseX = W + 80 - progress * totalSpan;
+  // High-DPI and maximize safety margins: cover beyond any display resolution
+  const safeRight = Math.max(W + 500, 3840);
+  const safeBottom = Math.max(H + 400, 2560);
+  const safeTop = -80;
 
-  const nodeCount = 48; // 48 ultra-smooth spline nodes for a continuous fluid surface
+  // Wave travels from right (+160) across to far left (-350)
+  const totalSpan = W + 510;
+  const baseX = (W + 160) - progress * totalSpan;
+
+  const nodeCount = 36;
   const points: Point[] = [];
 
   for (let i = 0; i <= nodeCount; i++) {
     const y = (i / nodeCount) * H;
     // Diagonal origin tilt: top leads by ~50px to reflect click at the top-right button
-    const tilt = -(1 - y / H) * 50;
+    const tilt = -(1 - y / Math.max(H, 1)) * 50;
     const undulation = getWaveOffsetPx(y, p, H);
     const x = baseX + tilt + undulation;
     points.push({ x, y });
   }
 
   // Construct closed path enclosing the new theme region on the right side of the moving wave front:
-  // (W + 80, -40) -> (W + 80, H + 40) -> (points[nodeCount].x, H + 40) -> smooth Catmull-Rom cubic splines UP to points[0] -> (W + 80, -40) -> Z
+  // (safeRight, safeTop) -> (safeRight, safeBottom) -> (points[nodeCount].x, safeBottom) -> smooth Catmull-Rom cubic splines UP to points[0] -> (safeRight, safeTop) -> Z
   const N = points.length - 1;
-  let d = `M ${Math.round(W + 80)} -40 L ${Math.round(W + 80)} ${Math.round(H + 40)} L ${points[N].x.toFixed(1)} ${Math.round(H + 40)} `;
+  let d = `M ${Math.round(safeRight)} ${safeTop} L ${Math.round(safeRight)} ${Math.round(safeBottom)} L ${points[N].x.toFixed(1)} ${Math.round(safeBottom)} `;
 
   for (let i = N; i > 0; i--) {
     const pCurrent = points[i];
@@ -108,7 +87,7 @@ function generateLiquidFrontPath(p: number, W: number, H: number): string {
     d += `C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${pNext.x.toFixed(1)} ${pNext.y.toFixed(1)} `;
   }
 
-  d += `L ${Math.round(W + 80)} -40 Z`;
+  d += `L ${Math.round(safeRight)} ${safeTop} Z`;
   return d;
 }
 
@@ -190,7 +169,11 @@ export function DesktopTitleBar({ title, isAuthenticated = false }: DesktopTitle
     return () => window.removeEventListener("themechange", handleThemeChange);
   }, []);
 
+  const isTransitioningRef = useRef(false);
+
   const toggleTheme = () => {
+    if (isTransitioningRef.current) return;
+
     const nextTheme = theme === "dark" ? "light" : "dark";
 
     // 1. Reduced Motion / Fallback: If reduced motion is preferred or View Transitions are unsupported
@@ -205,25 +188,50 @@ export function DesktopTitleBar({ title, isAuthenticated = false }: DesktopTitle
       return;
     }
 
-    // 2. Trigger native browser View Transition
-    const transition = document.startViewTransition(() => {
-      setTheme(nextTheme);
-      document.documentElement.setAttribute("data-theme", nextTheme);
-      try {
-        window.localStorage.setItem("vectoris.themePreference", nextTheme);
-      } catch {}
-      window.dispatchEvent(new Event("themechange"));
-    });
+    isTransitioningRef.current = true;
 
-    // 3. Animate the liquid water front directly on the compositor layer via Web Animations API
+    // 2. Cancel any leftover pseudo-element animations before starting a fresh transition
+    try {
+      document.getAnimations().forEach((anim) => {
+        const pseudo = (anim.effect as KeyframeEffect | undefined)?.pseudoElement;
+        if (pseudo && pseudo.startsWith("::view-transition")) {
+          anim.cancel();
+        }
+      });
+    } catch {}
+
+    // 3. Trigger native browser View Transition
+    let transition: any;
+    try {
+      transition = document.startViewTransition(() => {
+        setTheme(nextTheme);
+        document.documentElement.setAttribute("data-theme", nextTheme);
+        try {
+          window.localStorage.setItem("vectoris.themePreference", nextTheme);
+        } catch {}
+        window.dispatchEvent(new Event("themechange"));
+      });
+    } catch {
+      isTransitioningRef.current = false;
+      return;
+    }
+
+    // Always reset transition lock when finished or aborted
+    transition.finished
+      .catch(() => {})
+      .finally(() => {
+        isTransitioningRef.current = false;
+      });
+
+    // 4. Animate the liquid water front directly on the compositor layer via Web Animations API
     transition.ready
       .then(() => {
         const W = window.innerWidth;
         const H = window.innerHeight;
 
-        // Generate 36 smooth keyframes along the 1500ms timeline
+        // Generate 32 smooth keyframes along the 550ms timeline
         const keyframes: Keyframe[] = [];
-        const totalFrames = 36;
+        const totalFrames = 32;
 
         for (let i = 0; i <= totalFrames; i++) {
           const p = i / totalFrames;
@@ -233,14 +241,22 @@ export function DesktopTitleBar({ title, isAuthenticated = false }: DesktopTitle
           });
         }
 
-        document.documentElement.animate(keyframes, {
-          duration: 1500,
+        // CRITICAL: DO NOT use fill: "forwards" — it prevents View Transition cleanup and freezes the snapshot!
+        const anim = document.documentElement.animate(keyframes, {
+          duration: 550,
+          easing: "linear",
           pseudoElement: "::view-transition-new(root)",
-          fill: "forwards",
         });
+
+        anim.onfinish = () => {
+          isTransitioningRef.current = false;
+        };
+        anim.oncancel = () => {
+          isTransitioningRef.current = false;
+        };
       })
       .catch(() => {
-        // Interrupted/cancelled transition fallback
+        isTransitioningRef.current = false;
       });
   };
 

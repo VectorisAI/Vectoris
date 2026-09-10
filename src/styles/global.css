@@ -211,6 +211,7 @@ html, body {
   justify-content: space-between;
   height: 38px;
   min-height: 38px;
+  max-height: 38px;
   background: #110504;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   padding: 0 0 0 12px;
@@ -219,6 +220,8 @@ html, body {
   font-size: 12px;
   z-index: 1000;
   position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 :root[data-theme="light"] .desktop-titlebar,
@@ -232,12 +235,15 @@ html[data-theme="light"] .desktop-titlebar {
   align-items: center;
   gap: 8px;
   min-width: 0;
+  flex-shrink: 1;
+  white-space: nowrap;
 }
 
 .desktop-titlebar__brand {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .desktop-titlebar__name {
@@ -247,6 +253,7 @@ html[data-theme="light"] .desktop-titlebar {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-primary);
+  white-space: nowrap;
 }
 
 .desktop-titlebar__version {
@@ -257,6 +264,8 @@ html[data-theme="light"] .desktop-titlebar {
   padding: 1px 5px;
   border-radius: 4px;
   border: 1px solid var(--border-subtle);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 :root[data-theme="light"] .desktop-titlebar__version {
@@ -266,6 +275,7 @@ html[data-theme="light"] .desktop-titlebar {
 .desktop-titlebar__sep {
   color: var(--text-secondary);
   opacity: 0.35;
+  flex-shrink: 0;
 }
 
 .desktop-titlebar__context {
@@ -275,7 +285,7 @@ html[data-theme="light"] .desktop-titlebar {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 280px;
+  max-width: 200px;
 }
 
 .desktop-titlebar__center {
@@ -284,7 +294,9 @@ html[data-theme="light"] .desktop-titlebar {
   justify-content: center;
   align-items: center;
   height: 100%;
-  padding: 0 16px;
+  padding: 0 12px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .desktop-titlebar__status-pill {
@@ -298,6 +310,15 @@ html[data-theme="light"] .desktop-titlebar {
   font-size: 10.5px;
   font-family: var(--font-technical);
   color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+  max-width: 100%;
+}
+
+.desktop-titlebar__status-pill span:last-child {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 :root[data-theme="light"] .desktop-titlebar__status-pill {
@@ -310,6 +331,7 @@ html[data-theme="light"] .desktop-titlebar {
   border-radius: 50%;
   background: #10b981;
   box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+  flex-shrink: 0;
 }
 
 .desktop-titlebar__pill-static {
@@ -318,6 +340,9 @@ html[data-theme="light"] .desktop-titlebar {
   color: var(--text-secondary);
   opacity: 0.75;
   letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .desktop-titlebar__right {
@@ -325,6 +350,8 @@ html[data-theme="light"] .desktop-titlebar {
   align-items: center;
   height: 100%;
   margin-left: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .desktop-titlebar__org-badge {
@@ -337,6 +364,42 @@ html[data-theme="light"] .desktop-titlebar {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-subtle);
   border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.3;
+}
+
+.desktop-titlebar__org-badge span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Responsive Collapse Rules for Window Strip */
+@media (max-width: 980px) {
+  .desktop-titlebar__center {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .desktop-titlebar__org-badge {
+    display: none;
+  }
+  .desktop-titlebar__context {
+    max-width: 120px;
+  }
+}
+
+@media (max-width: 520px) {
+  .desktop-titlebar__sep,
+  .desktop-titlebar__context {
+    display: none;
+  }
 }
 
 .desktop-theme-btn {
@@ -2868,6 +2931,8 @@ html[data-theme="dark"] .app-shell,
   flex-direction: column;
   gap: 28px;
   max-width: 1400px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Header */
@@ -2877,6 +2942,8 @@ html[data-theme="dark"] .app-shell,
   justify-content: space-between;
   gap: 20px;
   flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
 }
 .projects-page__title {
   font-size: 2rem;
@@ -2904,6 +2971,8 @@ html[data-theme="dark"] .app-shell,
   background: var(--app-surface-2);
   border: 1px solid var(--app-border);
   border-radius: 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Status filter tabs */
@@ -3042,11 +3111,17 @@ html[data-theme="dark"] .app-shell,
 /* ── Project Grid — t-tilt cards with stagger entrance ───────────────────── */
 .projects-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
-@media (max-width: 1100px) { .projects-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 720px)  { .projects-grid { grid-template-columns: 1fr; } }
+.projects-grid > * {
+  min-width: 0;
+  width: 100%;
+}
+@media (max-width: 1240px) { .projects-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 768px)  { .projects-grid { grid-template-columns: minmax(0, 1fr); } }
 
 /* ── t-tilt — Card hover tilt (transitions-dev 19-card-tilt.md) ────────────
    Bind pointermove to outer .t-tilt (never transforms).
@@ -3054,6 +3129,9 @@ html[data-theme="dark"] .app-shell,
    ──────────────────────────────────────────────────────────────────────── */
 .t-tilt {
   touch-action: none;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
   /* Stagger entrance animation */
   opacity: 0;
   animation: card-fade-in var(--duration-slow) var(--ease-smooth-out) forwards;
@@ -3072,6 +3150,9 @@ html[data-theme="dark"] .app-shell,
 
 .t-tilt-card {
   position: relative;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
   border-radius: 14px;
   overflow: hidden;
   transform:
@@ -3132,6 +3213,9 @@ html[data-theme="dark"] .app-shell,
   gap: 14px;
   outline-offset: 3px;
   position: relative;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 .project-card:focus-visible {
   outline: 2px solid var(--accent);
@@ -3166,14 +3250,20 @@ html[data-theme="dark"] .app-shell,
   gap: 12px;
   position: relative;
   z-index: 1;
+  min-width: 0;
+  width: 100%;
 }
 .project-card__identity {
   display: flex;
   align-items: center;
   gap: 12px;
   min-width: 0;
+  flex: 1 1 0%;
 }
-.project-card__titles { min-width: 0; }
+.project-card__titles {
+  min-width: 0;
+  flex: 1 1 0%;
+}
 .project-card__name {
   font-size: 1rem;
   font-weight: 600;
@@ -11902,3 +11992,25 @@ html.theme-transitioning, html.theme-transitioning * {
   border-color: rgba(225, 29, 72, 0.4);
   background: linear-gradient(180deg, rgba(20, 20, 22, 0.95) 0%, rgba(225, 29, 72, 0.06) 100%);
 }
+
+/* ==========================================================================
+   View Transitions (Theme Toggle & Page Transitions)
+   Ensure pseudo-elements never capture pointer events, don't flash default UA
+   fades, and allow smooth custom JS compositor animations.
+   ========================================================================== */
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-group(root),
+::view-transition-image-pair(root) {
+  pointer-events: none;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+  pointer-events: none;
+}
+

@@ -236,6 +236,17 @@ export default function ProjectPlanPage() {
     return draftVersion.claims.filter((c) => Boolean(c.conflict_with_decision_id));
   }, [draftVersion]);
 
+  // ============================================================================
+  // TEMP: Mock Plan Creation Loop for Demo (Not for Production)
+  // ----------------------------------------------------------------------------
+  // The handlers below provide a complete client-side interactive plan loop
+  // for demo users and demonstration projects (e.g. APEX Hyperscale DC Campus 4).
+  // Includes grounded initial synthesis (v1), re-synthesis with pure claim diffing
+  // (+ Added, ~ Modified, - Removed) and Decision Conflict resolution (v2),
+  // and responsive Investigation Workshop answers.
+  // REMOVE OR DISABLE BEFORE PRODUCTION DEPLOYMENT.
+  // ============================================================================
+
   // Handle Synthesis / Re-synthesis
   const handleSynthesize = async () => {
     setIsSynthesizing(true);
@@ -243,80 +254,355 @@ export default function ProjectPlanPage() {
     setShowResynthesizeModal(false);
 
     try {
-      // Synthesize 4 sections of claims based on selected docs
       const selectedDocs = projectDocs.filter((d) => selectedDocIds.includes(d.id));
+      const primaryDoc = selectedDocs[0] || projectDocs[0];
+      const secondaryDoc = selectedDocs[1] || projectDocs[1] || primaryDoc;
       const docNames = selectedDocs.map((d) => d.filename).join(", ") || "Project Documents";
 
-      const proposedClaims: PlanClaim[] = [
-        {
-          id: `claim-gen-${Date.now()}-1`,
-          claim_id: activeVersion?.claims[0]?.claim_id || `cid-gen-1`,
-          plan_version_id: "",
-          section: "scope_outcomes",
-          content: `Execute turnkey electrical power distribution, substation works, and rack feeds verified against ${docNames}.`,
-          grounding: "known_from_evidence",
-          evidence_links: selectedDocs.slice(0, 1).map((d) => ({
-            document_id: d.id,
-            document_name: d.filename,
-            sheet_id: "E-001",
-            note: "Specification Title Sheet & Summary Scope",
-          })),
-        },
-        {
-          id: `claim-gen-${Date.now()}-2`,
-          claim_id: activeVersion?.claims[1]?.claim_id || `cid-gen-2`,
-          plan_version_id: "",
-          section: "scope_outcomes",
-          content: "Provide 480V/277V step-down transformers and dual-redundant busway overhead feeder systems.",
-          grounding: "inferred",
-          inference_rationale: "Derived from SLD transformer schedule and floor plan equipment tags.",
-          evidence_links: selectedDocs.slice(0, 1).map((d) => ({
-            document_id: d.id,
-            document_name: d.filename,
-            sheet_id: "E-104",
-          })),
-        },
-        {
-          id: `claim-gen-${Date.now()}-3`,
-          claim_id: `cid-gen-milestone-1`,
-          plan_version_id: "",
-          section: "milestones",
-          content: "Milestone: Energization of Primary Medium Voltage Switchgear and Utility Interlock.",
-          grounding: "known_from_evidence",
-          evidence_links: selectedDocs.slice(0, 1).map((d) => ({
-            document_id: d.id,
-            document_name: d.filename,
-            sheet_id: "E-002",
-            note: "Phasing Schedule",
-          })),
-        },
-        {
-          id: `claim-gen-${Date.now()}-4`,
-          claim_id: `cid-gen-risk-1`,
-          plan_version_id: "",
-          section: "risks",
-          content: "Lead-time vulnerability on 2500kVA transformers requires expedited manufacturing release.",
-          grounding: "inferred",
-          inference_rationale: "42-week factory lead time standard cross-referenced with target completion date.",
-          evidence_links: [],
-        },
-        {
-          id: `claim-gen-${Date.now()}-5`,
-          claim_id: `cid-gen-dep-1`,
-          plan_version_id: "",
-          section: "dependencies",
-          content: "Structural equipment pad curing and crane access coordination in Main Substation yard.",
-          grounding: "unresolved",
-          unresolved_reason: "Civil/Structural foundation schedule is missing from uploaded drawing package.",
-          evidence_links: [],
-        },
-      ];
+      // TEMP: Synthesize realistic electrical claims based on active version state
+      let proposedClaims: any[] = [];
+
+      if (!activeVersion) {
+        // Initial Plan (v1): 11 domain claims grounded across 4 canonical sections
+        proposedClaims = [
+          // ── Scope & Outcomes ──
+          {
+            id: `claim-scope-1`,
+            claim_id: `cid-gen-scope-1`,
+            plan_version_id: "",
+            section: "scope_outcomes",
+            content: `Turnkey 33kV Gas-Insulated Switchgear (GIS) Substation equipped with dual incoming utility feeders (Incomer-1 and Incomer-2) and motorized bus-tie vacuum circuit breaker verified against ${docNames}.`,
+            grounding: "known_from_evidence",
+            evidence_links: [
+              {
+                document_id: primaryDoc?.id || "doc-sld",
+                document_name: primaryDoc?.filename || "SLD-MV-33kV-Substation-Rev4.pdf",
+                sheet_id: "E-001",
+                note: "33kV Single Line Diagram — Main GIS Bays 1 & 2 with Interlock Logic",
+              },
+            ],
+          },
+          {
+            id: `claim-scope-2`,
+            claim_id: `cid-gen-scope-2`,
+            plan_version_id: "",
+            section: "scope_outcomes",
+            content: "Four (4) 2500kVA 33kV/415V Cast-Resin Dry-Type Step-Down Transformers feeding redundant Low Voltage switchboards (LV-SWBD-A through D).",
+            grounding: "known_from_evidence",
+            evidence_links: [
+              {
+                document_id: primaryDoc?.id || "doc-sld",
+                document_name: primaryDoc?.filename || "SLD-MV-33kV-Substation-Rev4.pdf",
+                sheet_id: "E-002",
+                note: "Transformer Schedule & Impedance Ratings (Z% = 6.25)",
+              },
+            ],
+          },
+          {
+            id: `claim-scope-3`,
+            claim_id: `cid-gen-scope-3`,
+            plan_version_id: "",
+            section: "scope_outcomes",
+            content: "Dual-redundant 4000A Sandwich Copper Busduct risers distributing secondary 415V power from substation vaults to Hyperscale Server Hall Pods A-D.",
+            grounding: "inferred",
+            inference_rationale: "Derived from 4000A frame size specified on LV-SWBD busbar schedules cross-referenced with architectural trench riser shafts.",
+            evidence_links: [
+              {
+                document_id: secondaryDoc?.id || "doc-cs",
+                document_name: secondaryDoc?.filename || "CableSchedule_Feeder_Trench_Rev2.xlsx",
+                sheet_id: "E-103",
+                note: "Busduct Riser Schedule & Feeder Details",
+              },
+            ],
+          },
+
+          // ── Milestones ──
+          {
+            id: `claim-ms-1`,
+            claim_id: `cid-gen-ms-1`,
+            plan_version_id: "",
+            section: "milestones",
+            content: "Milestone 1: Factory Acceptance Testing (FAT) and dielectric gas tightness verification for 33kV GIS at OEM manufacturing facility.",
+            grounding: "known_from_evidence",
+            evidence_links: [
+              {
+                document_id: primaryDoc?.id || "doc-sld",
+                document_name: primaryDoc?.filename || "SLD-MV-33kV-Substation-Rev4.pdf",
+                sheet_id: "E-001",
+                note: "General Notes & Commissioning Specifications §2.1",
+              },
+            ],
+          },
+          {
+            id: `claim-ms-2`,
+            claim_id: `cid-gen-ms-2`,
+            plan_version_id: "",
+            section: "milestones",
+            content: "Milestone 2: Delivery, rig-in, and SF6 pressure normalization of 33kV GIS assemblies onto Substation Level 1 plenum floor.",
+            grounding: "known_from_evidence",
+            evidence_links: [
+              {
+                document_id: primaryDoc?.id || "doc-sld",
+                document_name: primaryDoc?.filename || "SLD-MV-33kV-Substation-Rev4.pdf",
+                sheet_id: "E-002",
+                note: "Equipment Layout & Rigging Pathway Clearance",
+              },
+            ],
+          },
+          {
+            id: `claim-ms-3`,
+            claim_id: `cid-gen-ms-3`,
+            plan_version_id: "",
+            section: "milestones",
+            content: "Milestone 3: 33kV Primary Energization and Utility Interlock Synchronization witness testing with Regional Grid Authority.",
+            grounding: "inferred",
+            inference_rationale: "Required utility witness signoff prerequisite prior to downstream transformer back-feed and LV energization.",
+            evidence_links: [],
+          },
+
+          // ── Risks ──
+          {
+            id: `claim-risk-1`,
+            claim_id: `cid-gen-risk-1`,
+            plan_version_id: "",
+            section: "risks",
+            content: "Lead-time vulnerability: 2500kVA cast resin transformers carry a 38-42 week manufacturing release window, critical path to Q3 energization.",
+            grounding: "inferred",
+            inference_rationale: "OEM factory lead-time benchmarks cross-referenced with target milestone turnover date.",
+            evidence_links: [],
+          },
+          {
+            id: `claim-risk-2`,
+            claim_id: `cid-gen-risk-2`,
+            plan_version_id: "",
+            section: "risks",
+            content: "Trench bending radius violation risk for 1C x 630mm² Cu XLPE cables at the 90° entry transition into Substation Vault B.",
+            grounding: "known_from_evidence",
+            evidence_links: [
+              {
+                document_id: secondaryDoc?.id || "doc-cs",
+                document_name: secondaryDoc?.filename || "CableSchedule_Feeder_Trench_Rev2.xlsx",
+                sheet_id: "E-102",
+                note: "Feeder Trench Sizing & Minimum Bending Radii Note 4",
+              },
+            ],
+          },
+          {
+            id: `claim-risk-3`,
+            claim_id: `cid-gen-risk-3`,
+            plan_version_id: "",
+            section: "risks",
+            content: "Civil foundation structural load capacity and moisture vapor barrier verification for 12,500 kg transformer pads.",
+            grounding: "unresolved",
+            unresolved_reason: "Civil/Structural foundation signoff and core test reports (Package C-201) are absent from current drawing set.",
+            evidence_links: [],
+          },
+
+          // ── Dependencies ──
+          {
+            id: `claim-dep-1`,
+            claim_id: `cid-gen-dep-1`,
+            plan_version_id: "",
+            section: "dependencies",
+            content: "Substation switchgear gallery environmental control: HVAC positive pressure system must maintain <50% RH and dust filtration before uncrating GIS.",
+            grounding: "known_from_evidence",
+            evidence_links: [
+              {
+                document_id: primaryDoc?.id || "doc-sld",
+                document_name: primaryDoc?.filename || "SLD-MV-33kV-Substation-Rev4.pdf",
+                sheet_id: "E-001",
+                note: "Environmental & Storage Prerequisite Specs",
+              },
+            ],
+          },
+          {
+            id: `claim-dep-2`,
+            claim_id: `cid-gen-dep-2`,
+            plan_version_id: "",
+            section: "dependencies",
+            content: "Utility Grid Interconnection Agreement (GIA) final operational metering CT/PT ratio verification from regional transmission operator.",
+            grounding: "unresolved",
+            unresolved_reason: "Awaiting formal utility witness schedule letter and revenue meter seal approval.",
+            evidence_links: [],
+          },
+        ];
+      } else {
+        // Revision Plan (v2): Demonstrates Pure Claim Diffing (+ Added, ~ Modified) & Decision Conflict
+        proposedClaims = [
+          // Scope 1: Unchanged
+          activeVersion.claims.find((c) => c.claim_id === "cid-gen-scope-1") || {
+            id: `claim-scope-1`,
+            claim_id: `cid-gen-scope-1`,
+            plan_version_id: "",
+            section: "scope_outcomes",
+            content: `Turnkey 33kV Gas-Insulated Switchgear (GIS) Substation equipped with dual incoming utility feeders (Incomer-1 and Incomer-2) and motorized bus-tie vacuum circuit breaker verified against ${docNames}.`,
+            grounding: "known_from_evidence",
+            evidence_links: [
+              {
+                document_id: primaryDoc?.id || "doc-sld",
+                document_name: primaryDoc?.filename || "SLD-MV-33kV-Substation-Rev4.pdf",
+                sheet_id: "E-001",
+              },
+            ],
+          },
+          // Scope 2: Modified + Decision Conflict (~ Modified)
+          {
+            id: `claim-scope-2-v2`,
+            claim_id: "cid-gen-scope-2",
+            plan_version_id: "",
+            section: "scope_outcomes",
+            content: "Four (4) 3000kVA 33kV/415V Cast-Resin Dry-Type Transformers (upsized from 2500kVA to support expanded server pod liquid cooling loads).",
+            grounding: "known_from_evidence",
+            evidence_links: [
+              {
+                document_id: primaryDoc?.id || "doc-sld",
+                document_name: primaryDoc?.filename || "SLD-MV-33kV-Substation-Rev4.pdf",
+                sheet_id: "E-002",
+                note: "Upsized Transformer Schedule Rev 4.2",
+              },
+            ],
+            conflict_with_decision_id: "dec-demo-transformer",
+            conflict_details: "Active Human Decision requires dry-type cast resin; proposed revision specifies high-capacity 3000kVA dry-type unit.",
+          },
+          // Scope 3: Unchanged
+          activeVersion.claims.find((c) => c.claim_id === "cid-gen-scope-3") || {
+            id: `claim-scope-3`,
+            claim_id: "cid-gen-scope-3",
+            plan_version_id: "",
+            section: "scope_outcomes",
+            content: "Dual-redundant 4000A Sandwich Copper Busduct risers distributing secondary 415V power from substation vaults to Hyperscale Server Hall Pods A-D.",
+            grounding: "inferred",
+            inference_rationale: "Derived from 4000A frame size specified on LV-SWBD busbar schedules cross-referenced with architectural trench riser shafts.",
+            evidence_links: [],
+          },
+          // Scope 4: NEW (+ Added)
+          {
+            id: `claim-scope-4-v2`,
+            claim_id: "cid-gen-scope-4",
+            plan_version_id: "",
+            section: "scope_outcomes",
+            content: "Active Harmonic Filter (AHF) 600A mitigation units and 1500kVAR Power Factor Correction capacitors integrated at LV main incoming sections.",
+            grounding: "known_from_evidence",
+            evidence_links: [
+              {
+                document_id: primaryDoc?.id || "doc-sld",
+                document_name: primaryDoc?.filename || "SLD-MV-33kV-Substation-Rev4.pdf",
+                sheet_id: "E-002",
+                note: "Harmonic Filtration & Power Factor Notes",
+              },
+            ],
+          },
+
+          // Milestone 1 & 2: Unchanged
+          activeVersion.claims.find((c) => c.claim_id === "cid-gen-ms-1") || {
+            id: `claim-ms-1`,
+            claim_id: "cid-gen-ms-1",
+            plan_version_id: "",
+            section: "milestones",
+            content: "Milestone 1: Factory Acceptance Testing (FAT) and dielectric gas tightness verification for 33kV GIS at OEM manufacturing facility.",
+            grounding: "known_from_evidence",
+          },
+          activeVersion.claims.find((c) => c.claim_id === "cid-gen-ms-2") || {
+            id: `claim-ms-2`,
+            claim_id: "cid-gen-ms-2",
+            plan_version_id: "",
+            section: "milestones",
+            content: "Milestone 2: Delivery, rig-in, and SF6 pressure normalization of 33kV GIS assemblies onto Substation Level 1 plenum floor.",
+            grounding: "known_from_evidence",
+          },
+          // Milestone 3: Modified (~ Modified)
+          {
+            id: `claim-ms-3-v2`,
+            claim_id: "cid-gen-ms-3",
+            plan_version_id: "",
+            section: "milestones",
+            content: "Milestone 3: Synchronized 33kV dual-feeder closed-transition tie energization and utility protection relay scheme verification.",
+            grounding: "known_from_evidence",
+            evidence_links: [
+              {
+                document_id: primaryDoc?.id || "doc-sld",
+                document_name: primaryDoc?.filename || "SLD-MV-33kV-Substation-Rev4.pdf",
+                sheet_id: "E-001",
+                note: "Relay Coordination & Closed-Transition Note 6",
+              },
+            ],
+          },
+          // Milestone 4: NEW (+ Added)
+          {
+            id: `claim-ms-4-v2`,
+            claim_id: "cid-gen-ms-4",
+            plan_version_id: "",
+            section: "milestones",
+            content: "Milestone 4: 72-Hour Full Thermal Load Bank Integrated Systems Testing (IST) across Pods A-D.",
+            grounding: "inferred",
+            inference_rationale: "Required prerequisite for Level 4/5 Data Center Commissioning turnover.",
+            evidence_links: [],
+          },
+
+          // Risks: Risk 1 modified, Risk 2 & 3 unchanged
+          {
+            id: `claim-risk-1-v2`,
+            claim_id: "cid-gen-risk-1",
+            plan_version_id: "",
+            section: "risks",
+            content: "Upsized 3000kVA transformer procurement window compressed to 34 weeks under expedited OEM slot allocation.",
+            grounding: "inferred",
+            inference_rationale: "Expedited vendor factory slot confirmed with manufacturer.",
+            evidence_links: [],
+          },
+          activeVersion.claims.find((c) => c.claim_id === "cid-gen-risk-2") || {
+            id: `claim-risk-2`,
+            claim_id: "cid-gen-risk-2",
+            plan_version_id: "",
+            section: "risks",
+            content: "Trench bending radius violation risk for 1C x 630mm² Cu XLPE cables at the 90° entry transition into Substation Vault B.",
+            grounding: "known_from_evidence",
+          },
+          activeVersion.claims.find((c) => c.claim_id === "cid-gen-risk-3") || {
+            id: `claim-risk-3`,
+            claim_id: "cid-gen-risk-3",
+            plan_version_id: "",
+            section: "risks",
+            content: "Civil foundation structural load capacity and moisture vapor barrier verification for 12,500 kg transformer pads.",
+            grounding: "unresolved",
+            unresolved_reason: "Civil/Structural foundation signoff and core test reports (Package C-201) are absent from current drawing set.",
+          },
+
+          // Dependencies: Dep 1 unchanged, Dep 2 resolved (~ Modified)
+          activeVersion.claims.find((c) => c.claim_id === "cid-gen-dep-1") || {
+            id: `claim-dep-1`,
+            claim_id: "cid-gen-dep-1",
+            plan_version_id: "",
+            section: "dependencies",
+            content: "Substation switchgear gallery environmental control: HVAC positive pressure system must maintain <50% RH and dust filtration before uncrating GIS.",
+            grounding: "known_from_evidence",
+          },
+          {
+            id: `claim-dep-2-v2`,
+            claim_id: "cid-gen-dep-2",
+            plan_version_id: "",
+            section: "dependencies",
+            content: "Utility Grid Interconnection Agreement (GIA) final operational metering CT/PT ratio verification certified by transmission operator.",
+            grounding: "known_from_evidence",
+            evidence_links: [
+              {
+                document_id: primaryDoc?.id || "doc-sld",
+                document_name: primaryDoc?.filename || "SLD-MV-33kV-Substation-Rev4.pdf",
+                sheet_id: "E-001",
+                note: "GIA Final Utility Metering Certification Attached",
+              },
+            ],
+          },
+        ];
+      }
 
       await dataService.createProjectPlanDraft({
         projectId,
         documentIds: selectedDocIds,
         claims: proposedClaims,
       });
+
+      setViewMode("diff");
     } catch (err: any) {
       setActionError(err?.message || "Failed to generate plan draft.");
     } finally {
@@ -331,7 +617,6 @@ export default function ProjectPlanPage() {
 
     // If there are unresolved conflicts, open modal first
     if (conflictedClaims.length > 0) {
-      // Initialize default resolutions
       const initRes: Record<string, DecisionResolution> = {};
       conflictedClaims.forEach((c) => {
         initRes[c.claim_id] = {
@@ -347,6 +632,7 @@ export default function ProjectPlanPage() {
 
     try {
       await dataService.acceptProjectPlanDraft(projectId, draftVersion.id);
+      setViewMode("active");
     } catch (err: any) {
       setActionError(err?.message || "Failed to activate draft.");
     }
@@ -361,6 +647,7 @@ export default function ProjectPlanPage() {
     try {
       const resList = Object.values(resolutions);
       await dataService.acceptProjectPlanDraft(projectId, draftVersion.id, resList);
+      setViewMode("active");
     } catch (err: any) {
       setActionError(err?.message || "Failed to activate draft with resolutions.");
     }
@@ -399,9 +686,64 @@ export default function ProjectPlanPage() {
         setActiveSessionId(sessionId);
       }
 
-      await dataService.sendUserMessage(sessionId, text, "editor");
+      // TEMP: For demo investigation workshop, record user query and provide
+      // immediate high-fidelity responses citing actual electrical drawings
+      dataService.addSessionMessage(sessionId, {
+        role: "user",
+        content: text,
+      }, false);
 
-      // Refresh project plan data in case plan mutations occurred
+      const lower = text.toLowerCase();
+      if (lower.includes("milestone") || lower.includes("reasoning behind milestone")) {
+        dataService.addSessionMessage(sessionId, {
+          role: "assistant",
+          content: "### Milestone Verification Analysis\n\n- **Milestone 1 (Factory Acceptance Testing):** Mandated on **Sheet E-001 (§2.1)** to verify dielectric SF6 tightness (<0.1%/yr leak rate) and breaker timing before shipping.\n- **Milestone 2 (Rig-in & SF6 Normalization):** Critical for structural stabilization on Substation Level 1 plenum floor before applying any high-voltage potential.\n- **Milestone 3 (Utility Interlock Witnessing):** Non-negotiable utility prerequisite to authorize dual-feeder closed-transition tie energization with the Regional Grid Authority.",
+          metric_highlights: [
+            { label: "FAT Requirement", value: "100% Mandatory" },
+            { label: "Nominal Voltage", value: "33kV Medium Voltage" },
+            { label: "GIS Pressure", value: "1.45 bar SF6" },
+          ],
+          evidence: {
+            doc_name: "SLD-MV-33kV-Substation-Rev4.pdf",
+            sheet: "E-001",
+            region: "Main Substation Bay 1 & 2",
+            coordinates: "X: 140, Y: 220, W: 640, H: 420",
+          },
+        }, false);
+      } else if (lower.includes("risk") || lower.includes("highest risk")) {
+        dataService.addSessionMessage(sessionId, {
+          role: "assistant",
+          content: "### Critical Electrical Risks Identified\n\n1. **Transformer Supply Lead-Times (Critical Path):** 2500kVA cast resin transformers require a 38–42 week manufacturing window. Failure to issue early PO release jeopardizes energization.\n2. **Trench Bending Radius Violation (Sheet E-102 Note 4):** 1C x 630mm² Cu XLPE feeders require minimum 15x outer diameter bend radius (approx 780mm). The 90° entry into Vault B is constricted to 900mm width.\n3. **Pad Curing & Moisture (Unresolved):** Structural Package C-201 concrete core test results are missing, posing delay risk for 12,500 kg unit placement.",
+          metric_highlights: [
+            { label: "Transformer Lead-Time", value: "38–42 Weeks" },
+            { label: "Min Cable Bend", value: "15x OD (780mm)" },
+            { label: "Pad Equipment Weight", value: "12,500 kg" },
+          ],
+          evidence: {
+            doc_name: "CableSchedule_Feeder_Trench_Rev2.xlsx",
+            sheet: "E-102",
+            region: "Trench Sizing Table",
+          },
+        }, false);
+      } else if (lower.includes("unresolved")) {
+        dataService.addSessionMessage(sessionId, {
+          role: "assistant",
+          content: "### Unresolved Claims Audit\n\n- **Claim `cid-gen-risk-3` (Transformer Pad Structural Curing):** Missing civil foundation signoff and core sample test reports (Drawing Package C-201).\n- **Claim `cid-gen-dep-2` (Utility Interconnection Agreement):** Operational metering CT/PT ratio verification is pending formal utility witness inspection scheduling.\n\n*Recommendation: Request civil signoff letter from structural engineer and submit meter seal petition to regional transmission authority.*",
+          metric_highlights: [
+            { label: "Unresolved Items", value: "2 Claims" },
+            { label: "Missing Drawing", value: "Package C-201" },
+            { label: "Signoff Status", value: "Pending Utility" },
+          ],
+          evidence: {
+            doc_name: "SLD-MV-33kV-Substation-Rev4.pdf",
+            sheet: "E-002",
+            region: "Notes & Prerequisites",
+          },
+        }, false);
+      } else {
+        await dataService.sendUserMessage(sessionId, text, "editor");
+      }
+
       await dataService.fetchProjectPlan(projectId);
     } catch (err: any) {
       console.error("Plan investigation chat error:", err);
